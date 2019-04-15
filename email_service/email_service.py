@@ -1,37 +1,22 @@
-from elasticsearch import Elasticsearch
-from email_sender import EmailService
-import jmespath
+import smtplib
+# activate less secure apps with this link
+# https://myaccount.google.com/lesssecureapps
 
-search = {
-    'query': {
-        'bool': {
-            'must': [
-                {'match': {'job-title': 'Machine Learning'}},
-                {'match': {'job-team': 'Software and Services'}}
-            ]
-        }
-    }
-}
 
-es = Elasticsearch()
-results = es.search(index='jobs', body=search)
+class EmailService:
+    __slots__ = 'email_server', 'sender', 'receivers'
 
-email = EmailService(host='smtp.gmail.com', port=465,
-                     sender='jojokr94@gmail.com', receivers=['kraemer.johannes.p@gmail.com'])
-email.login(pw='jJWyERH88E6%Em^5i^!8CmXrG$@QiM2')
+    def __init__(self, host, port, sender, receivers):
+        self.email_server = smtplib.SMTP_SSL(host, port)
+        self.sender = sender
+        self.receivers = receivers
 
-for res in results['hits']['hits']:
-    job_title = res['_source']['job-title']
-    job_team = res['_source']['job-team']
-    url = res['_source']['url']
+    def login(self, pw):
+        self.email_server.ehlo()
+        self.email_server.login(self.sender, pw)
 
-    message = f"""From: Jobs\n
-        Subject: New Job at Apple\n
+    def send_message(self, message):
+        self.email_server.sendmail(self.sender, self.receivers, message)
 
-        Job-Title: {job_title}\n
-        Job-Team: {job_team}\n
-        {url}
-    """
-
-    email.send_message(message)
-
+    def send_messages(self, messages):
+        map(self.send_message, messages)

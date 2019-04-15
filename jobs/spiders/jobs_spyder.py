@@ -24,6 +24,7 @@ class JobsSpyder(Spider):
         posted = response.xpath("//div[@class='sum-info']/div[1]/span/strong/text()").get()
         posted = str(datetime.datetime.strptime(posted, '%b %d, %Y').date())
         yield {
+            'company': 'Apple',
             'url': response.request.url,
             'job-title': response.xpath("//div[@class='job-details']//h1/text()").get(),
             'job-location': response.xpath("//div[@class='job-details']"
@@ -39,6 +40,7 @@ class JobsSpyder(Spider):
             'additional-requirements': response.xpath("//div[@id='jd-additional-requirements']"
                                                       "/ul/li/span/text()").getall()
         }
+
 
 if __name__ == '__main__':
     from scrapy.crawler import CrawlerProcess
