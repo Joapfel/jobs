@@ -23,7 +23,8 @@ for subscriber in subscribers.find():
                         'bool': {
                             'should': [
                                 {'match': {'job-title': keywords_must}},
-                                {'match': {'job-team': keywords_must}},
+                                {'match': {'job-summary': keywords_must}},
+                                {'match': {'description': keywords_must}},
                             ]
                         }
                     },
@@ -35,10 +36,6 @@ for subscriber in subscribers.find():
                         }
                     }
                 ],
-                #'should': [
-                #    {'match': {'job-title': keywords_can}},
-                #    {'match': {'job-team': keywords_can}}
-                #]
             }
         }
     }

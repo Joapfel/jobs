@@ -43,6 +43,10 @@ class JobsSpyder(Spider):
 
 
 if __name__ == '__main__':
+    from settings.logging_initializer import init_logger
+    logger = init_logger('crawler_loggs')
+    logger.info('Starting crawle process.')
+
     from scrapy.crawler import CrawlerProcess
     from scrapy.utils.project import get_project_settings
 

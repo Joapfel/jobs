@@ -5,15 +5,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
+import logging
 from scrapy.exceptions import DropItem
 from elasticsearch import Elasticsearch
 import redis
 import hashlib
 
+logger = logging.getLogger('main.pipelines')
+
 
 class CheckValuesPipeline(object):
 
-    #TODO: more finegrade decision on missing values
     def process_item(self, item, spider):
         if not item['job-title']:
             item['job-title'] = ''
@@ -62,6 +64,8 @@ class AlreadyGotThatPipeline(object):
                 + ' '.join(str(el) for el in item['additional-requirements'])
         hashed = hashlib.md5(bytes(to_hash, encoding='utf8')).hexdigest()
         if self.agt_client.exists(hashed):
+            logger.info(f'Crawled item already saved.\n '
+                        f'Job title: {item["job-title"]} (Rolenumber: {item["role-number"]})')
             raise DropItem
         else:
             self.agt_client.set(name=hashed, value='seen')
@@ -92,6 +96,7 @@ class ElasticPipeline(object):
         es = Elasticsearch()
         # ignore 400 cause by IndexAlreadyExistsException when creating an index
         es.indices.create(index='jobs', body=self.mapping, ignore=400)
-        es.index(index='jobs', doc_type='job', body=item)
+        res = es.index(index='jobs', doc_type='job', body=item)
+        logger.info(f'Result of item upload: {res["result"]}\n '
+                    f'Job title: {item["job-title"]} (Rolenumber: {item["role-number"]})')
         raise DropItem
-        #return item
