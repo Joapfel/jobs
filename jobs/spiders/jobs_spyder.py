@@ -1,5 +1,9 @@
+import logging
+import re
 from scrapy import Spider
 import datetime
+
+logger = logging.getLogger('main.jobs-spyder')
 
 
 class JobsSpyder(Spider):
@@ -22,7 +26,23 @@ class JobsSpyder(Spider):
 
     def parse_job_description(self, response):
         posted = response.xpath("//div[@class='sum-info']/div[1]/span/strong/text()").get()
-        posted = str(datetime.datetime.strptime(posted, '%b %d, %Y').date())
+        try:
+            posted_tmp = str(datetime.datetime.strptime(posted, '%b %d, %Y').date())
+        except ValueError:
+            try:
+                posted_tmp = str(datetime.datetime.strptime(re.sub('[^0-9]\s*', ', ', posted),
+                                                            '%m, %d, %Y').date())
+            except ValueError:
+                try:
+                    posted_tmp = str(datetime.datetime.strptime(posted, '%B %d, %Y').date())
+                except ValueError:
+                    posted_tmp = str(datetime.datetime.now().date())
+                    logger.warning('Actual "Posted"-time was overridden with current time.')
+            logger.warning(f'Posted time not recognized: {posted}\n'
+                           f'Formatted to: {posted_tmp}\n')
+        if posted_tmp:
+            posted = posted_tmp
+
         yield {
             'company': 'Apple',
             'url': response.request.url,
