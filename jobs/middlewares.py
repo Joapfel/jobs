@@ -6,6 +6,31 @@
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+import random
+from scrapy.conf import settings
+from scrapy.http import HtmlResponse
+from selenium import webdriver
+
+
+class JsDownloader(object):
+
+    def process_request(self, request, spider):
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        driver = webdriver.Chrome(
+            executable_path='/home/johannes/projects/python/jobs/chromedriver',
+            chrome_options=options)
+        driver.get(request.url)
+        return HtmlResponse(request.url, encoding='utf-8',
+                            body=driver.page_source.encode('utf-8'))
+
+
+class RandomUserAgentMiddleware(object):
+
+    def process_request(self, request, spider):
+        ua = random.choice(settings.get('USER_AGENT_LIST'))
+        if ua:
+            request.headers.setdefault('User-Agent', ua)
 
 
 class JobsSpiderMiddleware(object):
